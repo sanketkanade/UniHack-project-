@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Toaster } from "react-hot-toast";
 import { ClientProviders } from "@/components/auth/ClientProviders";
+import { GlobalFloatingElements } from "@/components/layout/GlobalFloatingElements";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -39,7 +40,10 @@ export default function RootLayout({
             },
           }}
         />
-        <ClientProviders>{children}</ClientProviders>
+        <ClientProviders>
+          {children}
+          <GlobalFloatingElements />
+        </ClientProviders>
       </body>
     </html>
   );

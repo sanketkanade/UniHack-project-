@@ -34,6 +34,8 @@ class KinshipDB extends Dexie {
 }
 
 export const offlineDB = new KinshipDB();
+export const db = offlineDB;
+
 
 /** Save auth data (JWT + user_id) to Dexie */
 export async function saveAuthToOffline(data: {

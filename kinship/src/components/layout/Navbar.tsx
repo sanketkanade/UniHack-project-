@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Home, Map, AlertTriangle, User, Search, LogOut } from "lucide-react";
 import { useKinshipStore } from "@/lib/store";
 import { clearAuthFromOffline } from "@/lib/db";
-import { ConnectivityBanner } from "./ConnectivityBanner";
 import { useState } from "react";
 
 export function Navbar() {
@@ -38,8 +37,6 @@ export function Navbar() {
             }`}>
               Kinship
             </Link>
-
-            <ConnectivityBanner />
 
             <div className="flex items-center gap-1">
               <button

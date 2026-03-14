@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useKinshipStore } from "@/lib/store";
+import { useConnectivity } from "@/lib/ConnectivityContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { CheckInButtons } from "@/components/crisis/CheckInButtons";
 import { ClusterStatus } from "@/components/crisis/ClusterStatus";
@@ -15,6 +16,7 @@ import { Phone, AlertTriangle } from "lucide-react";
 
 export default function CrisisPage() {
   const router = useRouter();
+  const { mode } = useConnectivity();
   const {
     currentUser, token, cluster, isCrisisActive, isSimulation,
     setCrisisActive, setSimulation, checkIns, addCheckIn,
@@ -123,10 +125,11 @@ export default function CrisisPage() {
           </Card>
 
           {/* P2P Connection */}
-          <Card>
+          <Card className={mode === "p2p" ? "border-teal-400 shadow-[0_0_15px_rgba(20,184,166,0.2)]" : ""}>
             <P2PConnect
               userId={userId}
               clusterName={cluster?.name || "Kinship Cluster"}
+              isSatelliteMode={mode === "p2p"}
             />
           </Card>
 
