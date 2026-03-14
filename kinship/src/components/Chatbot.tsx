@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Trash2 } from "lucide-react";
+import { X, Send, Trash2 } from "lucide-react";
 import { useKinshipStore } from "@/lib/store";
 import { useConnectivity } from "@/lib/ConnectivityContext";
 import { db } from "@/lib/db";
@@ -21,6 +21,10 @@ export function Chatbot() {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [eyesLit, setEyesLit] = useState(false);
+  const [eyesBlink, setEyesBlink] = useState(false);
+  const [robotBounce, setRobotBounce] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { currentUser, isCrisisActive } = useKinshipStore();
   const { mode: connectivityMode } = useConnectivity();
@@ -33,6 +37,35 @@ export function Chatbot() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, isOpen, isLoading]);
+
+  // Blink eyes every 3s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setEyesBlink(true);
+      setTimeout(() => setEyesBlink(false), 180);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Light up eyes + increment unread on new assistant message
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (last?.role === "assistant" && !isOpen) {
+      setUnreadCount(c => c + 1);
+      setEyesLit(true);
+      setTimeout(() => setEyesLit(false), 2000);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
+
+  // Clear unread when opened
+  useEffect(() => { if (isOpen) setUnreadCount(0); }, [isOpen]);
+
+  const handleOpen = () => {
+    setRobotBounce(true);
+    setTimeout(() => setRobotBounce(false), 500);
+    setIsOpen(true);
+  };
 
   const PROMPT_CHIPS = [
     { text: "Tell me about your household", color: "teal" },
@@ -135,27 +168,137 @@ export function Chatbot() {
 
   return (
     <>
-      {/* Floating Action Button */}
+      {/* ── Robot animations CSS ── */}
+      <style jsx global>{`
+        @keyframes robotBreathe {
+          0%, 100% { transform: scale(1); }
+          50%       { transform: scale(1.04); }
+        }
+        .robot-breathe { animation: robotBreathe 3s ease-in-out infinite; }
+
+        @keyframes robotBounce {
+          0%  { transform: scale(1) translateY(0); }
+          30% { transform: scale(0.92) translateY(4px); }
+          60% { transform: scale(1.08) translateY(-6px); }
+          80% { transform: scale(0.97) translateY(2px); }
+          100%{ transform: scale(1) translateY(0); }
+        }
+        .robot-bounce { animation: robotBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+        @keyframes antennaWiggle {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(-18deg); }
+          75% { transform: rotate(18deg); }
+        }
+        .antenna-group:hover .antenna-left { animation: antennaWiggle 0.4s ease-in-out 0.05s; }
+        .antenna-group:hover .antenna-right { animation: antennaWiggle 0.4s ease-in-out 0s; }
+        .antenna-excited .antenna-left { animation: antennaWiggle 0.35s ease-in-out 0s infinite !important; }
+        .antenna-excited .antenna-right { animation: antennaWiggle 0.35s ease-in-out 0.12s infinite !important; }
+
+        @keyframes eyeGlow {
+          0%,100% { filter: brightness(1); }
+          50% { filter: brightness(1.6) drop-shadow(0 0 3px white); }
+        }
+        .eye-lit { animation: eyeGlow 0.6s ease-in-out 3; }
+
+        @keyframes notifPop {
+          0%  { transform: scale(0); }
+          70% { transform: scale(1.3); }
+          100%{ transform: scale(1); }
+        }
+        .notif-dot { animation: notifPop 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
+        @keyframes slideUpSpring {
+          0%  { opacity: 0; transform: translateY(20px) scale(0.96); }
+          100%{ opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .chat-slide-in { animation: slideUpSpring 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+      `}</style>
+
+      {/* ── Robot FAB ── */}
       <button
-        onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 z-50 p-4 bg-teal-600 text-white rounded-full shadow-xl hover:bg-teal-700 transition-transform active:scale-95 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
-        aria-label="Open Chat"
+        onClick={handleOpen}
+        className={`fixed bottom-[100px] right-6 z-[1001] transition-all duration-300 ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+        style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+        aria-label="Open Kinship Assistant"
       >
-        <MessageCircle size={24} />
+        <div className={`antenna-group relative ${robotBounce ? 'robot-bounce' : 'robot-breathe'} drop-shadow-xl`}>
+          {/* Notification dot */}
+          {unreadCount > 0 && (
+            <div className="notif-dot absolute -top-1 -right-1 z-10 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </div>
+          )}
+
+          <svg width="76" height="84" viewBox="0 0 56 62" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Left antenna */}
+            <g className="antenna-left" style={{ transformOrigin: "18px 14px" }}>
+              <line x1="18" y1="14" x2="12" y2="4" stroke="#00B4A6" strokeWidth="2.5" strokeLinecap="round" />
+              <circle cx="12" cy="3" r="2.5" fill={eyesLit ? "#ffffff" : "#00eadd"} />
+            </g>
+            {/* Right antenna */}
+            <g className="antenna-right" style={{ transformOrigin: "38px 14px" }}>
+              <line x1="38" y1="14" x2="44" y2="4" stroke="#00B4A6" strokeWidth="2.5" strokeLinecap="round" />
+              <circle cx="44" cy="3" r="2.5" fill={eyesLit ? "#ffffff" : "#00eadd"} />
+            </g>
+            {/* Robot head */}
+            <rect x="8" y="14" width="40" height="36" rx="9" fill="#00B4A6" />
+            {/* Head shine */}
+            <ellipse cx="20" cy="19" rx="7" ry="4" fill="rgba(255,255,255,0.18)" />
+            {/* Left eye */}
+            <circle cx="21" cy="28" r="5" fill="rgba(255,255,255,0.15)" />
+            <circle
+              cx="21" cy="28" r={eyesBlink ? 1 : 3.5}
+              fill={eyesLit ? "#ffffff" : "#e0fffe"}
+              className={eyesLit ? "eye-lit" : ""}
+              style={{ transition: "r 60ms ease" }}
+            />
+            {/* Right eye */}
+            <circle cx="35" cy="28" r="5" fill="rgba(255,255,255,0.15)" />
+            <circle
+              cx="35" cy="28" r={eyesBlink ? 1 : 3.5}
+              fill={eyesLit ? "#ffffff" : "#e0fffe"}
+              className={eyesLit ? "eye-lit" : ""}
+              style={{ transition: "r 60ms ease" }}
+            />
+            {/* Mouth: smile or concerned */}
+            {isMentalHealthMode ? (
+              <path d="M20 40 Q28 36 36 40" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" />
+            ) : (
+              <path d="M20 38 Q28 44 36 38" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none" />
+            )}
+            {/* Chin bolts */}
+            <circle cx="16" cy="46" r="2" fill="rgba(255,255,255,0.35)" />
+            <circle cx="40" cy="46" r="2" fill="rgba(255,255,255,0.35)" />
+            {/* Neck */}
+            <rect x="22" y="50" width="12" height="6" rx="3" fill="#009e91" />
+            {/* Body base */}
+            <rect x="14" y="56" width="28" height="6" rx="4" fill="#00a89b" />
+          </svg>
+        </div>
       </button>
 
       {/* Chat Modal */}
       <div 
-        className={`fixed z-50 flex flex-col bg-white shadow-2xl transition-all duration-300 ease-out sm:rounded-2xl border border-gray-100 overflow-hidden
+        className={`fixed z-[1001] flex flex-col bg-white shadow-2xl transition-all duration-300 ease-out sm:rounded-2xl border border-gray-100 overflow-hidden
         ${isOpen 
-          ? "bottom-0 right-0 w-full h-full sm:bottom-6 sm:right-6 sm:w-96 sm:h-[600px] sm:max-h-[calc(100vh-48px)] opacity-100 pointer-events-auto transform translate-y-0" 
+          ? "bottom-0 right-0 w-full h-full sm:bottom-6 sm:right-6 sm:w-96 sm:h-[600px] sm:max-h-[calc(100vh-48px)] opacity-100 pointer-events-auto chat-slide-in" 
           : "bottom-6 right-6 w-96 h-[600px] opacity-0 pointer-events-none transform translate-y-8 scale-95"
         }`}
       >
         {/* Header */}
-        <div className={`flex items-center justify-between p-4 text-white shadow-sm shrink-0 transition-colors ${isMentalHealthMode ? 'bg-[#7C3AED]' : 'bg-teal-600'}`}>
+        <div className={`flex items-center justify-between p-4 text-white shadow-sm shrink-0 transition-colors ${isMentalHealthMode ? 'bg-mentalHealth' : 'bg-primary'}`}>
           <div className="flex items-center gap-2">
-            <MessageCircle size={20} />
+            {/* Mini robot icon */}
+            <svg width="22" height="22" viewBox="0 0 56 56" fill="none">
+              <rect x="8" y="14" width="40" height="32" rx="9" fill="rgba(255,255,255,0.25)" />
+              <circle cx="21" cy="28" r="4" fill="white" opacity="0.9" />
+              <circle cx="35" cy="28" r="4" fill="white" opacity="0.9" />
+              {isMentalHealthMode
+                ? <path d="M20 40 Q28 36 36 40" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                : <path d="M20 38 Q28 44 36 38" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+              }
+            </svg>
             <h3 className="font-semibold">{isMentalHealthMode ? 'You are not alone' : 'Kinship Guide'}</h3>
           </div>
           <div className="flex items-center gap-1">
@@ -201,10 +344,10 @@ export function Chatbot() {
             const isMentalHealth = msg.mode === "mental_health";
             const isNonEnglish = msg.language && msg.language !== "en";
             const bubbleColor = msg.role === "user" 
-              ? "bg-teal-600 text-white rounded-br-sm" 
+              ? "bg-primary text-white rounded-br-sm shadow-sm" 
               : isMentalHealth 
-                ? "bg-purple-100 border border-purple-200 text-purple-900 rounded-bl-sm shadow-sm"
-                : "bg-white border border-gray-100 text-gray-800 rounded-bl-sm shadow-sm";
+                ? "bg-mentalHealth/10 border border-mentalHealth/20 text-textDark rounded-bl-sm shadow-sm"
+                : "bg-white border border-gray-100 text-textDark rounded-bl-sm shadow-sm";
 
             return (
               <div 
@@ -221,7 +364,7 @@ export function Chatbot() {
                       <p className="text-xs opacity-90">I noticed you shared some profile details. Want to save them?</p>
                       <button 
                         onClick={() => alert("Profile update logic would go here!")}
-                        className="text-xs bg-teal-600 text-white px-3 py-1.5 rounded-md hover:bg-teal-700 transition w-full font-medium"
+                        className="text-xs bg-primary text-white px-3 py-1.5 rounded-md hover:-translate-y-0.5 shadow-sm hover:shadow-md transition-all w-full font-medium"
                       >
                         Save to your profile
                       </button>
@@ -254,10 +397,10 @@ export function Chatbot() {
                 type="button"
                 onClick={() => handleSend(undefined, chip.text)}
                 disabled={isLoading}
-                className={`text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition-colors ${
+                className={`text-[11px] font-medium px-2.5 py-1.5 rounded-full border transition-all active:scale-95 ${
                   chip.color === 'teal' 
-                    ? 'border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100' 
-                    : 'border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100'
+                    ? 'border-accent/30 bg-accent/5 text-accent hover:bg-accent/10 shadow-sm' 
+                    : 'border-mentalHealth/30 bg-mentalHealth/5 text-mentalHealth hover:bg-mentalHealth/10 shadow-sm'
                 }`}
               >
                 {chip.text}
@@ -270,7 +413,7 @@ export function Chatbot() {
         <div className="p-3 bg-white border-t border-gray-100 shrink-0">
           <form 
             onSubmit={handleSend}
-            className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full pr-1 pl-4 py-1 focus-within:ring-2 focus-within:ring-teal-500/20 focus-within:border-teal-500 transition-all"
+            className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full pr-1 pl-4 py-1.5 focus-within:ring-2 focus-within:ring-accent/20 focus-within:border-accent transition-all"
           >
             <input
               type="text"
@@ -283,13 +426,13 @@ export function Chatbot() {
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className={`p-2 text-white rounded-full transition-colors cursor-pointer disabled:opacity-50 ${
+              className={`p-2 w-10 h-10 flex items-center justify-center text-white rounded-full transition-transform transform hover:scale-105 active:scale-95 cursor-pointer disabled:opacity-50 ${
                 isMentalHealthMode 
-                  ? 'bg-[#7C3AED] hover:bg-purple-700 disabled:hover:bg-[#7C3AED]' 
-                  : 'bg-teal-600 hover:bg-teal-700 disabled:hover:bg-teal-600'
+                  ? 'bg-mentalHealth shadow-md shadow-mentalHealth/20' 
+                  : 'bg-primary shadow-md shadow-primary/20'
               }`}
             >
-              <Send size={16} className="-ml-0.5 mt-0.5" />
+              <Send size={18} className="translate-x-[1px]" />
             </button>
           </form>
         </div>

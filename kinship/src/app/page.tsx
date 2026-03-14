@@ -155,34 +155,34 @@ export default function AuthLandingPage() {
       {mode === "choose" && (
         <div className="w-full max-w-sm space-y-3 animate-fade-slide-up">
           <Card
-            className="p-5 cursor-pointer hover:shadow-md transition-all border-2 border-transparent hover:border-primary/20"
+            className="p-6 rounded-xl cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 border-2 border-transparent hover:border-primary/20"
             onClick={() => setMode("signup")}
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-                <UserPlus className="text-primary" size={22} />
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+                <UserPlus className="text-primary" size={28} />
               </div>
               <div className="flex-1">
-                <h3 className="text-base font-bold text-textDark">New User</h3>
-                <p className="text-sm text-textMuted">Create an account &amp; join your neighbourhood</p>
+                <h3 className="text-lg font-bold text-textDark">New User</h3>
+                <p className="text-sm text-textMuted mt-1">Create an account &amp; join your neighbourhood</p>
               </div>
-              <ArrowRight className="text-textMuted" size={18} />
+              <ArrowRight className="text-textMuted" size={20} />
             </div>
           </Card>
 
           <Card
-            className="p-5 cursor-pointer hover:shadow-md transition-all border-2 border-transparent hover:border-primary/20"
+            className="p-6 rounded-xl cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 border-2 border-transparent hover:border-primary/20"
             onClick={() => setMode("signin")}
           >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-success/10 rounded-full flex items-center justify-center">
-                <LogIn className="text-success" size={22} />
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 bg-success/10 rounded-full flex items-center justify-center">
+                <LogIn className="text-success" size={28} />
               </div>
               <div className="flex-1">
-                <h3 className="text-base font-bold text-textDark">Existing User</h3>
-                <p className="text-sm text-textMuted">Sign in to your Kinship account</p>
+                <h3 className="text-lg font-bold text-textDark">Existing User</h3>
+                <p className="text-sm text-textMuted mt-1">Sign in to your Kinship account</p>
               </div>
-              <ArrowRight className="text-textMuted" size={18} />
+              <ArrowRight className="text-textMuted" size={20} />
             </div>
           </Card>
 

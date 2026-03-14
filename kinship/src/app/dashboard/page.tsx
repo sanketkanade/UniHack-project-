@@ -9,7 +9,7 @@ import { ClusterDashboard } from "@/components/cluster/ClusterDashboard";
 import { CrisisSimulation } from "@/components/crisis/CrisisSimulation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { AlertTriangle, Droplets, Flame } from "lucide-react";
+import { AlertTriangle, Droplets, Flame, Users } from "lucide-react";
 import type { Cluster } from "@/types";
 import toast from "react-hot-toast";
 
@@ -90,8 +90,8 @@ export default function DashboardPage() {
       <Navbar />
       <main className="max-w-5xl mx-auto p-4 space-y-4">
         {/* Map */}
-        <Card className="p-0 overflow-hidden">
-          <div className="relative" style={{ height: "45vh", minHeight: "300px" }}>
+        <Card className="p-0 overflow-hidden shadow-sm">
+          <div className="relative h-[50vh] min-h-[400px]">
             <NeighbourhoodMap
               cluster={cluster}
               currentUserId={currentUser.id}
@@ -132,8 +132,14 @@ export default function DashboardPage() {
         )}
 
         {!cluster && (
-          <Card className="text-center p-8">
-            <p className="text-textMuted">No cluster assigned yet. More neighbours need to join your area first.</p>
+          <Card className="text-center py-12 px-6 flex flex-col items-center">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <Users size={32} className="text-primary" />
+            </div>
+            <h3 className="text-xl font-bold text-textDark mb-2">No Cluster Assigned</h3>
+            <p className="text-textMuted max-w-md">
+              We are waiting for more neighbours to join your area. A Kinship cluster will automatically be formed once enough people in your suburb are online.
+            </p>
           </Card>
         )}
 

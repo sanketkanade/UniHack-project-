@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Map, AlertTriangle, User, Search, LogOut } from "lucide-react";
+import { Home, Map, AlertTriangle, User, Search, LogOut, Menu, X } from "lucide-react";
 import { useKinshipStore } from "@/lib/store";
 import { clearAuthFromOffline } from "@/lib/db";
 import { useState } from "react";
@@ -12,6 +12,7 @@ export function Navbar() {
   const router = useRouter();
   const { isCrisisActive, token, logout } = useKinshipStore();
   const [showSearch, setShowSearch] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await clearAuthFromOffline();
@@ -31,17 +32,18 @@ export function Navbar() {
         isCrisisActive ? "bg-danger/95 border-danger" : "bg-white/90 border-gray-100"
       }`}>
         <div className="max-w-5xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
+          <div className="flex items-center justify-between h-16">
             <Link href="/dashboard" className={`text-xl font-extrabold tracking-tight ${
               isCrisisActive ? "text-white" : "text-primary"
             }`}>
               Kinship
             </Link>
 
-            <div className="flex items-center gap-1">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-2">
               <button
                 onClick={() => setShowSearch(!showSearch)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-2 rounded-full transition-colors ${
                   isCrisisActive ? "text-white hover:bg-white/20" : "text-textMuted hover:bg-gray-100"
                 }`}
                 aria-label="Search"
@@ -55,14 +57,15 @@ export function Navbar() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`p-2 rounded-lg transition-colors ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-full transition-all duration-200 ${
                       isCrisisActive
-                        ? isActive ? "bg-white/20 text-white" : "text-white/70 hover:bg-white/10"
-                        : isActive ? "bg-primary/10 text-primary" : "text-textMuted hover:bg-gray-100"
+                        ? isActive ? "bg-white/20 text-white font-bold shadow-sm" : "text-white/70 hover:bg-white/10"
+                        : isActive ? "bg-primary/10 text-primary font-bold shadow-sm" : "text-textMuted hover:bg-gray-100"
                     }`}
                     aria-label={item.label}
                   >
                     <item.icon size={20} />
+                    <span className="text-sm">{item.label}</span>
                   </Link>
                 );
               })}
@@ -71,10 +74,10 @@ export function Navbar() {
               {token && (
                 <button
                   onClick={handleLogout}
-                  className={`p-2 rounded-lg transition-colors ${
+                  className={`p-2 rounded-full transition-colors ${
                     isCrisisActive
                       ? "text-white/70 hover:bg-white/10"
-                      : "text-textMuted hover:bg-red-50 hover:text-danger"
+                      : "text-textMuted hover:bg-danger/10 hover:text-danger"
                   }`}
                   aria-label="Logout"
                   title="Logout"
@@ -83,8 +86,67 @@ export function Navbar() {
                 </button>
               )}
             </div>
+
+            {/* Mobile Nav Toggle */}
+            <div className="flex md:hidden items-center gap-2">
+              <button
+                onClick={() => setShowSearch(!showSearch)}
+                className={`p-2 rounded-full transition-colors ${
+                  isCrisisActive ? "text-white hover:bg-white/20" : "text-textMuted hover:bg-gray-100"
+                }`}
+              >
+                <Search size={20} />
+              </button>
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`p-2 rounded-full transition-colors ${
+                  isCrisisActive ? "text-white hover:bg-white/20" : "text-textMuted hover:bg-gray-100"
+                }`}
+              >
+                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            </div>
           </div>
         </div>
+        
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className={`md:hidden border-t px-4 py-4 space-y-2 animate-fade-slide-up ${
+            isCrisisActive ? "bg-danger border-white/20" : "bg-white border-gray-100"
+          }`}>
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                    isCrisisActive
+                      ? isActive ? "bg-white/20 text-white font-bold" : "text-white/80"
+                      : isActive ? "bg-primary/10 text-primary font-bold" : "text-textDark hover:bg-gray-50"
+                  }`}
+                >
+                  <item.icon size={20} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+            {token && (
+              <button
+                onClick={handleLogout}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                  isCrisisActive
+                    ? "text-white/80 hover:bg-white/10"
+                    : "text-danger hover:bg-danger/10"
+                }`}
+              >
+                <LogOut size={20} />
+                <span>Logout</span>
+              </button>
+            )}
+          </div>
+        )}
       </nav>
 
       {showSearch && (

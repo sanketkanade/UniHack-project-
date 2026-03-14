@@ -186,18 +186,18 @@ export default function NeighbourhoodMap({
             )}
           >
             <Popup>
-              <div className="text-sm min-w-[160px]">
-                <strong className="text-base">{m.profile.name}</strong>
-                {isCurrentUser && <span className="text-primary ml-1">(You)</span>}
-                {dist > 0 && <p className="text-gray-500">{formatDistance(dist)} away</p>}
-                <div className="flex flex-wrap gap-1 mt-1">
+              <div className="text-sm min-w-[160px] font-sans">
+                <strong className="text-base text-textDark font-bold">{m.profile.name}</strong>
+                {isCurrentUser && <span className="text-accent ml-1 font-bold">(You)</span>}
+                {dist > 0 && <p className="text-textMuted mt-0.5">{formatDistance(dist)} away</p>}
+                <div className="flex flex-wrap gap-1 mt-2">
                   {m.capabilities.slice(0, 3).map((c, ci) => (
-                    <span key={ci} className="text-xs">
+                    <span key={ci} className="text-[10px] font-medium bg-accent/10 text-accent px-1.5 py-0.5 rounded-md">
                       {getCategoryIcon(c.category)} {c.tag.replace(/_/g, " ")}
                     </span>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-textMuted mt-1.5 font-medium">
                   🗣️ {m.profile.languages.join(", ")}
                 </p>
               </div>

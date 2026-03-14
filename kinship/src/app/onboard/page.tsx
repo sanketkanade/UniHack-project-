@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { LoadingScreen } from "@/components/ui/LoadingScreen";
+import { AddressAutocomplete } from "@/components/ui/AddressAutocomplete";
 import { ArrowLeft, ArrowRight, Check, Lock, Sparkles, MapPin } from "lucide-react";
 import { getCategoryIcon } from "@/lib/utils";
 import toast from "react-hot-toast";
@@ -170,9 +171,11 @@ export default function OnboardPage() {
 
   // Step 1 state
   const [name, setName] = useState("");
-  const [suburb, setSuburb] = useState("Footscray");
-  const [postcode, setPostcode] = useState("3011");
+  const [suburb, setSuburb] = useState("");
+  const [postcode, setPostcode] = useState("");
   const [approxLocation, setApproxLocation] = useState("");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [householdSize, setHouseholdSize] = useState(1);
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(["English"]);
   const [geoLocation, setGeoLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -236,8 +239,15 @@ export default function OnboardPage() {
     }
   }, []);
 
-  // Get coordinates based on suburb name or geolocation
+  // Get coordinates — prefer Nominatim result, then GPS, then suburb lookup, then default
   const getUserCoords = () => {
+    if (lat !== null && lng !== null) {
+      // Slightly offset for privacy (~50m radius)
+      return {
+        lat: lat + (Math.random() - 0.5) * 0.0009,
+        lng: lng + (Math.random() - 0.5) * 0.0009,
+      };
+    }
     if (geoLocation) return geoLocation;
     const suburbKey = suburb.toLowerCase().trim();
     if (SUBURB_COORDS[suburbKey]) {
@@ -443,16 +453,23 @@ export default function OnboardPage() {
   return (
     <main className="min-h-screen bg-warmWhite p-4">
       <div className="max-w-lg mx-auto pt-8">
-        {/* Progress dots */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              className={`w-3 h-3 rounded-full transition-colors ${
-                s === step ? "bg-primary scale-125" : s < step ? "bg-success" : "bg-gray-200"
-              }`}
-            />
-          ))}
+        {/* Progress Bar & Dots */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-sm font-semibold text-textMuted uppercase tracking-wider">
+              Step {step} of 3
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className={`h-2 flex-1 rounded-full transition-colors duration-300 ${
+                  s === step ? "bg-accent" : s < step ? "bg-success" : "bg-gray-200"
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Step 1: About You */}
@@ -465,7 +482,7 @@ export default function OnboardPage() {
               <input
                 type="text" value={name} onChange={(e) => setName(e.target.value)}
                 placeholder="First name or nickname"
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all outline-none"
               />
             </div>
 
@@ -474,25 +491,36 @@ export default function OnboardPage() {
                 <label className="block text-sm font-medium text-textDark mb-1">Suburb</label>
                 <input
                   type="text" value={suburb} onChange={(e) => setSuburb(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all outline-none"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-textDark mb-1">Postcode</label>
                 <input
                   type="text" value={postcode} onChange={(e) => setPostcode(e.target.value)}
-                  className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                  className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all outline-none"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-textDark mb-1">Approximate location</label>
-              <input
-                type="text" value={approxLocation} onChange={(e) => setApproxLocation(e.target.value)}
-                placeholder="e.g., near Barkly St"
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+              <label className="block text-sm font-medium text-textDark mb-1">
+                Search your address
+              </label>
+              <AddressAutocomplete
+                value={approxLocation}
+                onChange={setApproxLocation}
+                onSelect={({ suburb: s, postcode: p, lat: lt, lng: lg }) => {
+                  if (s) setSuburb(s);
+                  if (p) setPostcode(p);
+                  setLat(lt);
+                  setLng(lg);
+                }}
+                placeholder="e.g., 12 Barkly St, Footscray"
               />
+              <p className="mt-1.5 text-xs text-textMuted flex items-center gap-1">
+                <Lock size={11} /> Only suburb, postcode &amp; approximate location are saved — never your exact address
+              </p>
             </div>
 
             <div>
@@ -500,7 +528,7 @@ export default function OnboardPage() {
               <input
                 type="number" min={1} max={10} value={householdSize}
                 onChange={(e) => setHouseholdSize(parseInt(e.target.value) || 1)}
-                className="w-24 rounded-lg border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
+                className="w-24 rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all outline-none"
               />
             </div>
 
@@ -572,7 +600,7 @@ export default function OnboardPage() {
                 value={capFreeText} onChange={(e) => setCapFreeText(e.target.value)}
                 placeholder="e.g., I have a ute that fits 5 people, I'm a trained paramedic, I have a large water tank..."
                 rows={3}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all outline-none resize-none"
               />
             </div>
 
@@ -619,7 +647,7 @@ export default function OnboardPage() {
                 value={needFreeText} onChange={(e) => setNeedFreeText(e.target.value)}
                 placeholder="e.g., My mother lives with me, she's 82 and uses a wheelchair. She only speaks Vietnamese..."
                 rows={3}
-                className="w-full rounded-lg border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all outline-none resize-none"
               />
             </div>
 

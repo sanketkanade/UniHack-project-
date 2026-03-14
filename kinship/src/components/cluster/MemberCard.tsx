@@ -34,7 +34,7 @@ export function MemberCard({ member, currentUserLocation, isCurrentUser }: Membe
       {/* Languages */}
       <div className="flex flex-wrap gap-1 mb-2">
         {member.profile.languages.map((lang, i) => (
-          <span key={i} className="text-xs bg-primary/5 text-primary px-2 py-0.5 rounded-full">
+          <span key={i} className="text-xs bg-gray-100 text-textDark px-2 py-0.5 rounded-full">
             🗣️ {lang}
           </span>
         ))}
@@ -43,7 +43,7 @@ export function MemberCard({ member, currentUserLocation, isCurrentUser }: Membe
       {/* Capabilities */}
       <div className="flex flex-wrap gap-1 mb-2">
         {member.capabilities.slice(0, 4).map((cap, i) => (
-          <span key={i} className="text-xs bg-success/10 text-success px-2 py-0.5 rounded-full">
+          <span key={i} className="text-xs bg-accent/10 text-accent font-medium px-2 py-0.5 rounded-full">
             {getCategoryIcon(cap.category)} {cap.tag.replace(/_/g, " ")}
           </span>
         ))}
